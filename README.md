@@ -1,5 +1,5 @@
 # afl-editor
-A **command-line** tool that **finds & replaces strings in AFL files** (AFS File Lists).
+A **Java** tool (supporting both CLI and GUI) that **finds & replaces strings in AFL files** (AFS File Lists).
 # Demonstration
 ## Example 1
 A **single AFL** taken from DBZ Budokai Tenkaichi 1. Here, I replace ``bgm`` with ``hello there``, which **contains a space**.
@@ -12,6 +12,36 @@ Here, I replace ``Akuman`` with ``Vive_The_Modder``, and since **there are under
 
 Also, ``PZS3US1_PROTO_OG.AFL`` is **skipped** because **its number of files does not properly line up** with the AFL's file size.
 ![afl-editor-2](https://github.com/user-attachments/assets/26a3a882-e1ab-4275-bb7b-343457f944f5)
+## Example 3
+Screenshots of the tool working on Windows 7 and Linux Mint.
+
+![afl-editor-3](https://i.imgur.com/xp3jYAG.png)
+
+![afl-editor-4](https://i.imgur.com/vX8Tl7U.png)
+
+![afl-editor-5](https://i.imgur.com/kKNhz7I.png)![afl-editor-6](https://i.imgur.com/Q1TqU7h.png)
+
+![afl-editor-7](https://i.imgur.com/fmpkXT9.png)![afl-editor-8](https://i.imgur.com/fw5K8tE.png)
+## Example 4
+Screenshots of the tool working on Windows XP, running straight from the JAR, and Command Prompt.
+![afl-editor-9](https://i.imgur.com/zDNGmem.png)
+
+![afl-editor-10](https://i.imgur.com/tCWRVA3.png)
+
+![afl-editor-11](https://i.imgur.com/ZOCfMSl.png)
+
+![afl-editor-12](https://i.imgur.com/PresINg.png)
+
+![afl-editor-13](https://i.imgur.com/6gqkHSG.png)
+
+![afl-editor-14](https://i.imgur.com/1RjLb6I.png)
+
+![afl-editor-15](https://i.imgur.com/Ptkwr1a.png)
+
+![afl-editor-16](https://i.imgur.com/pW9Hfzt.png)
+
+![afl-editor-17](https://i.imgur.com/phW5WG0.png)
+
 # Notes
 1. The ``-ra`` and ``-rf`` refer to instances of the string to find and replace within **each file name**, not the whole AFL.
 
@@ -24,4 +54,4 @@ So, using ``-rf`` will not make one replacement for the whole AFL, but rather **
 
 The only upside is that **his tool has some GUI**. That's it. 
 
-Mine will **have GUI too**, but CLI is not going anywhere...
+Fortunately, so **does mine** (as of 22 November 2024).

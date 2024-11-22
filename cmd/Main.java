@@ -1,13 +1,19 @@
 package cmd;
-//AFL Editor v1.0 by ViveTheModder
+//AFL Editor v1.1 - CMD
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 public class Main 
 {
+	static int fileNameCnt, fileNameTotal;
 	static RandomAccessFile afl;
 	public static boolean isValidAFL() throws IOException
 	{
@@ -15,10 +21,10 @@ public class Main
 		long size = afl.length();
 		int header1 = afl.readInt();
 		long header2 = afl.readLong();
-		int files = LittleEndian.getInt(afl.readInt());
+		fileNameTotal = LittleEndian.getInt(afl.readInt());
 		if (header1!=0x41464C00) aflError=true; //header must always start with AFL
 		if (header2!=0x01000000FFFFFFFFL) aflError=true;
-		if ((files*32)==(size-16)) aflError=true;
+		if ((fileNameTotal*32)==(size-16)) aflError=true;
 		return aflError;
 	}
 	public static void writeAFL(String[] args) throws IOException
@@ -35,6 +41,20 @@ public class Main
 			args[2] = args[2].replace('"'+"", ""); //remove quotes
 			if (args[0].equals("-rf")) fileName = fileName.replaceFirst(args[1], args[2]);
 			else if (args[0].equals("-ra")) fileName = fileName.replace(args[1], args[2]);
+						
+			if (Application.nameProgBar!=null)
+			{
+				if (fileName.contains(args[2]))
+				{
+					fileNameCnt++; //only increase counter when replace method actually does something
+					Application.nameProgBar.setValue(fileNameCnt);
+				}
+				else 
+				{
+					fileNameTotal--; //otherwise, don't increase it, but decrease maximum file count instead
+					Application.nameProgBar.setMaximum(fileNameTotal);
+				}
+			}
 			
 			if (fileName.length()>32) fileName=fileName.substring(0, 32);
 			fileNameArr = fileName.getBytes(StandardCharsets.ISO_8859_1);
@@ -75,44 +95,84 @@ public class Main
 				}					
 			}
 		}
+		else if (args.length==0) 
+		{
+			try 
+			{
+				if (System.getProperty("os.name").contains("Win")) UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				Application.setApplication();
+			} 
+			catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1) 
+			{
+				//I prefer this means of logging over printStackTrace(), although it is not that necessary here
+				File errorLog = new File("errors.log");
+				try 
+				{
+					FileWriter logWriter = new FileWriter(errorLog,true);
+					logWriter.append(new SimpleDateFormat("dd-MM-yy-hh-mm-ss").format(new Date())+":\n"+e1.getMessage()+"\n");
+					logWriter.close();
+				} 
+				catch (IOException e2) 
+				{
+					e2.printStackTrace();
+				}
+			}
+		}
 		else
 		{
 			System.out.println("Invalid number of arguments provided ("+args.length+")!");
 			System.exit(2);
 		}
 	}
+	public static void error(Exception e1)
+	{
+		File errorLog = new File("errors.log");
+		try 
+		{
+			FileWriter logWriter = new FileWriter(errorLog,true);
+			logWriter.append(new SimpleDateFormat("dd-MM-yy-hh-mm-ss").format(new Date())+":\n"+e1.getMessage()+"\n");
+			logWriter.close();
+		} 
+		catch (IOException e2) 
+		{
+			e2.printStackTrace();
+		}
+	}
 	public static void main(String[] args) throws IOException 
 	{
 		argCheck(args);
-		Scanner sc = new Scanner(System.in);
-		File src = new File(".");
-		while (true)
+		if (args.length!=0)
 		{
-			System.out.println("Enter a valid path containing AFL files:");
-			String path = sc.nextLine();
-			src = new File(path);
-			if (src.isDirectory()) break;
-		}
-		sc.close();
-		
-		long start = System.currentTimeMillis();
-		File[] pathList = src.listFiles((dir, name) -> (name.toLowerCase().endsWith(".afl")));
-		RandomAccessFile[] aflList = new RandomAccessFile[pathList.length];
-		for (int i=0; i<aflList.length; i++)
-			aflList[i] = new RandomAccessFile(pathList[i],"rw");
-		for (int i=0; i<aflList.length; i++)
-		{
-			afl = aflList[i];
-			String aflName = pathList[i].getName();
-			if (isValidAFL()) 
+			Scanner sc = new Scanner(System.in);
+			File src = new File(".");
+			while (true)
 			{
-				System.out.println("Finding & replacing names in "+aflName+"...");
-				writeAFL(args);
+				System.out.println("Enter a valid path containing AFL files:");
+				String path = sc.nextLine();
+				src = new File(path);
+				if (src.isDirectory()) break;
 			}
-			else System.out.println("Skipping faulty AFL: "+aflName+"!");
+			sc.close();
+			
+			long start = System.currentTimeMillis();
+			File[] pathList = src.listFiles((dir, name) -> (name.toLowerCase().endsWith(".afl")));
+			RandomAccessFile[] aflList = new RandomAccessFile[pathList.length];
+			for (int i=0; i<aflList.length; i++)
+				aflList[i] = new RandomAccessFile(pathList[i],"rw");
+			for (int i=0; i<aflList.length; i++)
+			{
+				afl = aflList[i];
+				String aflName = pathList[i].getName();
+				if (isValidAFL()) 
+				{
+					System.out.println("Finding & replacing names in "+aflName+"...");
+					writeAFL(args);
+				}
+				else System.out.println("Skipping faulty AFL: "+aflName+"!");
+			}
+			long finish = System.currentTimeMillis();
+			double time = (finish-start)/(double)1000;
+			System.out.println("Time: "+time+" s");
 		}
-		long finish = System.currentTimeMillis();
-		double time = (finish-start)/(double)1000;
-		System.out.println("Time: "+time+" s");
 	}
 }
