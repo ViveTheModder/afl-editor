@@ -1,5 +1,5 @@
 package cmd;
-//AFL Editor v1.1 - CMD
+//AFL Editor v1.2 - CMD
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 public class Main 
 {
@@ -58,6 +57,14 @@ public class Main
 			
 			if (fileName.length()>32) fileName=fileName.substring(0, 32);
 			fileNameArr = fileName.getBytes(StandardCharsets.ISO_8859_1);
+			if (fileNameArr.length<32) //rarely happens, but if it does, set array size to 32 by copying everything over to array with zeroes
+			{
+				byte[] temp = fileNameArr;
+				fileNameArr = new byte[32];
+				for (int j=0; j<32; j++) fileNameArr[j]=0;
+				System.arraycopy(temp, 0, fileNameArr, 0, temp.length);
+			}
+			System.out.println(fileName+"||"+fileNameArr.length);
 			if (fileNameArr[31]!=0) fileNameArr[31]=0; //this serves as a footer
 			afl.write(fileNameArr);
 		}
@@ -102,20 +109,10 @@ public class Main
 				if (System.getProperty("os.name").contains("Win")) UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				Application.setApplication();
 			} 
-			catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e1) 
+			catch (Exception e1) 
 			{
 				//I prefer this means of logging over printStackTrace(), although it is not that necessary here
-				File errorLog = new File("errors.log");
-				try 
-				{
-					FileWriter logWriter = new FileWriter(errorLog,true);
-					logWriter.append(new SimpleDateFormat("dd-MM-yy-hh-mm-ss").format(new Date())+":\n"+e1.getMessage()+"\n");
-					logWriter.close();
-				} 
-				catch (IOException e2) 
-				{
-					e2.printStackTrace();
-				}
+				error(e1);
 			}
 		}
 		else
@@ -138,7 +135,7 @@ public class Main
 			e2.printStackTrace();
 		}
 	}
-	public static void main(String[] args) throws IOException 
+	public static void main(String[] args) 
 	{
 		argCheck(args);
 		if (args.length!=0)
@@ -155,20 +152,27 @@ public class Main
 			sc.close();
 			
 			long start = System.currentTimeMillis();
-			File[] pathList = src.listFiles((dir, name) -> (name.toLowerCase().endsWith(".afl")));
-			RandomAccessFile[] aflList = new RandomAccessFile[pathList.length];
-			for (int i=0; i<aflList.length; i++)
-				aflList[i] = new RandomAccessFile(pathList[i],"rw");
-			for (int i=0; i<aflList.length; i++)
+			try
 			{
-				afl = aflList[i];
-				String aflName = pathList[i].getName();
-				if (isValidAFL()) 
+				File[] pathList = src.listFiles((dir, name) -> (name.toLowerCase().endsWith(".afl")));
+				RandomAccessFile[] aflList = new RandomAccessFile[pathList.length];
+				for (int i=0; i<aflList.length; i++)
+					aflList[i] = new RandomAccessFile(pathList[i],"rw");
+				for (int i=0; i<aflList.length; i++)
 				{
-					System.out.println("Finding & replacing names in "+aflName+"...");
-					writeAFL(args);
+					afl = aflList[i];
+					String aflName = pathList[i].getName();
+					if (isValidAFL()) 
+					{
+						System.out.println("Finding & replacing names in "+aflName+"...");
+						writeAFL(args);
+					}
+					else System.out.println("Skipping faulty AFL: "+aflName+"!");
 				}
-				else System.out.println("Skipping faulty AFL: "+aflName+"!");
+			}
+			catch (Exception e)
+			{
+				error(e);
 			}
 			long finish = System.currentTimeMillis();
 			double time = (finish-start)/(double)1000;

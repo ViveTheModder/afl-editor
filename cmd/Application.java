@@ -1,5 +1,5 @@
 package cmd;
-//AFL Editor v1.1 - GUI
+//AFL Editor v1.2 - GUI
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -37,12 +37,13 @@ public class Application
 	static JProgressBar nameProgBar;
 	private static File src;
 	private static JFrame frame;
+	private static JDialog loading;
 	private static final Image ICON = Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("img/icon.png"));
 	private static final String HTML_TEXT_1 = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-weight: bold; font-size: 14px;'>";
 	private static final String HTML_TEXT_2 = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-weight: bold; font-size: 14px; text-align: center;'>";
 	private static final String HTML_TEXT_TIP = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-size: 12px; text-align: center;'>";
 	private static final String HTML_TEXT_TITLE = "<html><div style='font-family: Tahoma, Geneva, sans-serif;  font-weight: bold; font-size: 20px; color: #20b2aa;'>";
-	private static final String WINDOW_TITLE = "AFL Editor v1.1";
+	private static final String WINDOW_TITLE = "AFL Editor v1.2";
 	private static String[] argsFromGUI = new String[3];
 	public static void setProgress() throws IOException
 	{
@@ -60,7 +61,7 @@ public class Application
 		    UIManager.put("ProgressBar.selectionBackground", Color.BLACK);
 		    UIManager.put("ProgressBar.selectionForeground", Color.BLACK);
 			//initialize components
-			JDialog loading = new JDialog();
+			loading = new JDialog();
 			JProgressBar fileProgBar = new JProgressBar();
 			nameProgBar = new JProgressBar();
 			JPanel panel = new JPanel();
@@ -241,8 +242,9 @@ public class Application
 					{
 						setProgress();
 					} 
-					catch (IOException e1) 
+					catch (Exception e1) 
 					{
+						loading.setVisible(false); loading.dispose();
 						Main.error(e1);
 					}
 				}
