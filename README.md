@@ -1,5 +1,9 @@
 # afl-editor
 A **Java** tool (supporting both CLI and GUI) that **finds & replaces strings in AFL files** (AFS File Lists).
+
+It can also prevent duplicate file names by adding the file ID at the end of said duplicates.
+
+That way, AFS Explorer can export these files independently, without them overwriting each other.
 # Demonstration
 ## Example 1
 A **single AFL** taken from DBZ Budokai Tenkaichi 1. Here, I replace ``bgm`` with ``hello there``, which **contains a space**.
