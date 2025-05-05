@@ -1,5 +1,5 @@
 package cmd;
-//AFL Editor v1.2 - GUI
+//AFL Editor v1.3 - GUI
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -38,14 +38,21 @@ public class Application
 	private static File src;
 	private static JFrame frame;
 	private static JDialog loading;
-	private static final Image ICON = Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("img/icon.png"));
+	private static final Toolkit DEF_TOOLKIT = Toolkit.getDefaultToolkit();
+	private static final Image ICON = DEF_TOOLKIT.getImage(ClassLoader.getSystemResource("img/icon.png"));
 	private static final String HTML_TEXT_1 = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-weight: bold; font-size: 14px;'>";
 	private static final String HTML_TEXT_2 = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-weight: bold; font-size: 14px; text-align: center;'>";
 	private static final String HTML_TEXT_TIP = "<html><div style='font-family: Tahoma, Geneva, sans-serif; font-size: 12px; text-align: center;'>";
 	private static final String HTML_TEXT_TITLE = "<html><div style='font-family: Tahoma, Geneva, sans-serif;  font-weight: bold; font-size: 20px; color: #20b2aa;'>";
-	private static final String WINDOW_TITLE = "AFL Editor v1.2";
+	private static final String WINDOW_TITLE = "AFL Editor v1.3";
 	private static String[] argsFromGUI = new String[3];
-	public static void setProgress() throws IOException
+	
+	private static void errorBeep()
+	{
+		Runnable runWinErrorSnd = (Runnable) DEF_TOOLKIT.getDesktopProperty("win.sound.exclamation");
+		if (runWinErrorSnd!=null) runWinErrorSnd.run();
+	}
+	private static void setProgress(boolean isApplyBtnClicked) throws IOException
 	{
 		File[] pathList = src.listFiles((dir, name) -> (name.toLowerCase().endsWith(".afl")));
 		if (pathList.length==0)
@@ -119,19 +126,21 @@ public class Application
 						String aflName = pathList[i].getName();
 						if (Main.isValidAFL()) 
 						{
-							
 							fileLabel.setText(HTML_TEXT_2+"Working on:<br>"+aflName+"<br>");
 							Main.fileNameCnt=0;
 							nameProgBar.setValue(0);
 							nameProgBar.setMaximum(Main.fileNameTotal);
-							Main.writeAFL(argsFromGUI);
+							if (isApplyBtnClicked) Main.writeAFL(argsFromGUI);
+							else Main.fixDuplicateFileNames();
 						}
 						else fileLabel.setText(HTML_TEXT_2+"Skipping:<br>"+aflName+"<br>");
 						fileProgBar.setValue(i+1);
 					}
 					long finish = System.currentTimeMillis();
 					double time = (finish-start)/(double)1000;
+					
 					loading.setVisible(false); loading.dispose();
+					DEF_TOOLKIT.beep();
 					JOptionPane.showMessageDialog(null, HTML_TEXT_1+"AFL files have been overwritten successfully in "+time+" seconds!", 
 					WINDOW_TITLE, JOptionPane.INFORMATION_MESSAGE);
 					System.exit(0);
@@ -145,6 +154,8 @@ public class Application
 	{
 		//initialize components
 		frame = new JFrame(WINDOW_TITLE);
+		JButton applyBtn = new JButton(HTML_TEXT_1+"Apply Changes");
+		JButton noDupliBtn = new JButton(HTML_TEXT_1+"Fix Duplicate Names");
 		JPanel panel = new JPanel(new GridLayout(0,1));
 		JLabel titleLabel = new JLabel(HTML_TEXT_TITLE+WINDOW_TITLE);
 		JLabel findLabel = new JLabel(HTML_TEXT_1+"String to Find:");
@@ -157,7 +168,6 @@ public class Application
 		JRadioButton replaceFirstBtn = new JRadioButton(HTML_TEXT_1+"Replace First");
 		ButtonGroup replaceBtnGrp = new ButtonGroup();
 		Box dirBox = Box.createHorizontalBox();
-		JButton btn = new JButton(HTML_TEXT_1+"Apply Changes");
 		Image glass = Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("img/glass.png"));
 		glass = glass.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
 		ImageIcon glassIcon = new ImageIcon(glass);
@@ -173,6 +183,7 @@ public class Application
 		replaceField.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		replaceAllBtn.setToolTipText(HTML_TEXT_TIP+"Replaces all instances of the string for each file name in the AFL.");
 		replaceFirstBtn.setToolTipText(HTML_TEXT_TIP+"Replaces only the first instance of the string for each file name in the AFL.");
+		noDupliBtn.setToolTipText(HTML_TEXT_TIP+"Adds the file ID at the end of each duplicate file name,<br>since AFS Explorer overwrites files with the same name.");
 		titleLabel.setToolTipText(HTML_TEXT_TIP+"Made by ViveTheModder.");
 		//make label behave like button via mouse listener
 		dirLabelAsBtn.addMouseListener(new MouseAdapter()
@@ -207,7 +218,7 @@ public class Application
 				argsFromGUI[0]="-rf";
 			}
 		});
-		btn.addActionListener(new ActionListener()
+		applyBtn.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent e) 
@@ -240,15 +251,40 @@ public class Application
 				{
 					try 
 					{
-						setProgress();
+						setProgress(true);
 					} 
 					catch (Exception e1) 
 					{
 						loading.setVisible(false); loading.dispose();
-						Main.error(e1);
+						e1.printStackTrace();
 					}
 				}
-				else JOptionPane.showMessageDialog(null, HTML_TEXT_1+msg, WINDOW_TITLE, JOptionPane.ERROR_MESSAGE);
+				else 
+				{
+					errorBeep();
+					JOptionPane.showMessageDialog(null, HTML_TEXT_1+msg, WINDOW_TITLE, 0);
+				}
+			}
+		});
+		noDupliBtn.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				try 
+				{
+					if (src==null) 
+					{
+						errorBeep();
+						JOptionPane.showMessageDialog(null, HTML_TEXT_1+"No AFL directory has been selected!", WINDOW_TITLE, 0);
+					}
+					else setProgress(false);
+				} 
+				catch (IOException e1) 
+				{
+					loading.setVisible(false); loading.dispose();
+					e1.printStackTrace();
+				}
 			}
 		});
 		//add components
@@ -259,7 +295,8 @@ public class Application
 		dirBox.add(dirLabel); dirBox.add(dirLabelAsBtn);
 		panel.add(dirBox);
 		panel.add(replaceAllBtn); panel.add(replaceFirstBtn);
-		panel.add(btn);
+		panel.add(applyBtn);
+		panel.add(noDupliBtn);
 		//set frame settings
 		frame.add(panel);
 		frame.setLayout(new GridBagLayout());
