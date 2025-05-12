@@ -1,23 +1,21 @@
 # afl-editor
 A **Java** tool (supporting both CLI and GUI) that **finds & replaces strings in AFL files** (AFS File Lists).
 
-It can also prevent duplicate file names by adding the file ID at the end of said duplicates.
-
 That way, AFS Explorer can export these files independently, without them overwriting each other.
 # Demonstration
-## Example 1
+## Example 1 - Find & Replace (Single AFL)
 A **single AFL** taken from DBZ Budokai Tenkaichi 1. Here, I replace ``bgm`` with ``hello there``, which **contains a space**.
 
 ![afl-editor-1](https://github.com/user-attachments/assets/42ceeba6-f378-4bc3-8d3a-7b3cfabd35b8)
-## Example 2
+## Example 2 - Find & Replace (Multiple AFLs)
 **Several AFLs** from DBZ Budokai Tenkaichi 3, both the final version and its prototype. 
 
 Here, I replace ``Akuman`` with ``Vive_The_Modder``, and since **there are underscores**, **quotes and spaces are unnecessary**.
 
 Also, ``PZS3US1_PROTO_OG.AFL`` is **skipped** because **its number of files does not properly line up** with the AFL's file size.
 ![afl-editor-2](https://github.com/user-attachments/assets/26a3a882-e1ab-4275-bb7b-343457f944f5)
-## Example 3
-Screenshots of the tool working on Windows 7 and Linux Mint.
+## Example 3 - GUI Ver. on Win 7 & Linux Mint
+Screenshots of (an old version of) the tool working on Windows 7 and Linux Mint.
 
 ![afl-editor-3](https://i.imgur.com/xp3jYAG.png)
 
@@ -26,25 +24,29 @@ Screenshots of the tool working on Windows 7 and Linux Mint.
 ![afl-editor-5](https://i.imgur.com/kKNhz7I.png)![afl-editor-6](https://i.imgur.com/Q1TqU7h.png)
 
 ![afl-editor-7](https://i.imgur.com/fmpkXT9.png)![afl-editor-8](https://i.imgur.com/fw5K8tE.png)
-## Example 4
-Screenshots of the tool working on Windows XP, running straight from the JAR, and Command Prompt.
-![afl-editor-9](https://i.imgur.com/zDNGmem.png)
+## Example 4 - Fix Duplicate Names
+The tool can also prevent duplicate file names by adding the file ID at the end of said duplicates.
 
-![afl-editor-10](https://i.imgur.com/tCWRVA3.png)
+![afl-editor-8](https://github.com/user-attachments/assets/7c371b14-98ba-4a1c-b91e-545f98fdf240)
 
-![afl-editor-11](https://i.imgur.com/ZOCfMSl.png)
+![afl-editor-9](https://github.com/user-attachments/assets/9cf0f463-ee56-4374-abee-73c993c04c64)
 
-![afl-editor-12](https://i.imgur.com/PresINg.png)
+![afl-editor-10](https://github.com/user-attachments/assets/ad89c395-8c1a-4051-8fc2-047c4b95be8c)
 
-![afl-editor-13](https://i.imgur.com/6gqkHSG.png)
+![afl-editor-11](https://github.com/user-attachments/assets/922060f4-0149-4f64-a81f-6ce263b3418d)
 
-![afl-editor-14](https://i.imgur.com/1RjLb6I.png)
+## Example 5 - Display/Edit Names
+[AFS Explorer](http://www.mediafire.com/file/0xjq0c2g4r014iq/AFS_Explorer.zip) can already do this, but not for several AFLs...
 
-![afl-editor-15](https://i.imgur.com/Ptkwr1a.png)
+![afl-editor-12](https://github.com/user-attachments/assets/95d0e38a-212f-4c70-8be0-1a7939976055)
 
-![afl-editor-16](https://i.imgur.com/pW9Hfzt.png)
+![afl-editor-13](https://github.com/user-attachments/assets/62595dc6-4def-4a35-9ea1-f830c0405c5e)
 
-![afl-editor-17](https://i.imgur.com/phW5WG0.png)
+![afl-editor-14](https://github.com/user-attachments/assets/3a4e27a7-a213-4e58-a8af-25ee60a6fb13)
+
+![afl-editor-15](https://github.com/user-attachments/assets/35c54926-d33a-4cec-b949-21ab5600074b)
+
+![afl-editor-16](https://github.com/user-attachments/assets/3c2676f5-19ca-4f43-a57c-a6c78bbcf862)
 
 # Notes
 1. The ``-ra`` and ``-rf`` refer to instances of the string to find and replace within **each file name**, not the whole AFL.
