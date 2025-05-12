@@ -1,13 +1,11 @@
 package cmd;
-//AFL Editor v1.3 - CMD
+//AFL Editor v1.4 - CMD
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.Scanner;
 import javax.swing.UIManager;
 
@@ -36,6 +34,24 @@ public class Main
 			cnt++;
 		}
 		return cnt;
+	}
+	public static String[] getFileNames() throws IOException
+	{
+		String[] fileNames = new String[65535];
+		afl.seek(16);
+		for (int i=0; i<fileNameTotal; i++)
+		{
+			byte[] fileNameArr = new byte[32];
+			afl.read(fileNameArr);
+			fileNames[i] = new String(fileNameArr, StandardCharsets.ISO_8859_1);
+			fileNames[i] = fileNames[i].replace("\0", "");
+			if (Application.nameProgBar!=null)
+			{
+				fileNameCnt++;
+				Application.nameProgBar.setValue(fileNameCnt);
+			}
+		}
+		return fileNames;
 	}
 	public static void fixDuplicateFileNames() throws IOException
 	{
@@ -90,7 +106,7 @@ public class Main
 			}
 		}
 	}
-	public static void writeAFL(String[] args) throws IOException
+	public static void writeAfl(String[] args) throws IOException
 	{
 		afl.seek(16); //skip header
 		for (int i=0; i<afl.length()-16; i+=32)
@@ -102,8 +118,8 @@ public class Main
 			
 			args[1] = args[1].replace('"'+"", ""); //remove quotes
 			args[2] = args[2].replace('"'+"", ""); //remove quotes
-			if (args[0].equals("-rf")) fileName = fileName.replaceFirst(args[1], args[2]);
-			else if (args[0].equals("-ra")) fileName = fileName.replace(args[1], args[2]);
+			if (args[0].endsWith("f")) fileName = fileName.replaceFirst(args[1], args[2]);
+			else if (args[0].endsWith("a")) fileName = fileName.replace(args[1], args[2]);
 						
 			if (Application.nameProgBar!=null)
 			{
@@ -132,41 +148,51 @@ public class Main
 			afl.write(fileNameArr);
 		}
 	}
+	public static void writeAflByRenaming(String[] names) throws IOException
+	{
+		afl.seek(16); //skip header
+		for (String name: names)
+		{
+			byte[] newNameBytes = new byte[32];
+			byte[] oldNameBytes = name.getBytes();
+			System.arraycopy(oldNameBytes, 0, newNameBytes, 0, oldNameBytes.length);
+			afl.write(newNameBytes);
+		}
+	}
 	public static void argCheck(String[] args)
 	{
-		String[] argTypes = {"-ra","-rf","-fd"};
-		if (args.length>0 && args.length<4)
+		boolean[] argMatches = new boolean[4], argMismatches = new boolean[4];
+		String[] argTypes = {"-ra","-rf","-fd","-pn"};
+		if (args.length>3)
 		{
-			if (args.length==1)
+			System.out.println("Too many arguments! Only up to 3 arguments can be entered.");
+			System.exit(1);
+		}
+		else if (args.length>0)
+		{
+			for (int i=0; i<argTypes.length; i++)
 			{
 				if (args[0].equals("-h"))
 				{
 					System.out.println
 					("Edit AFL files by finding & replacing strings from file names."
 					+ "\nThe program can take the following arguments:\n"
-					+ "args[0]: -ra (Replace All), -rf (Replace First), -fd (Fix Duplicates)\n"
+					+ "args[0]: -ra (Replace All), -rf (Replace First), -fd (Fix Duplicates), -pn (Print Names)\n"
 					+ "args[1]: Insert string to find, preferably without spaces or between quotes.\n"
 					+ "args[2]: Insert string to replace, preferably without spaces or between quotes.\n\n"
 					+ "Usage: java -jar afl-editor.jar args[0] args[1] args[2]");
 					System.exit(0);
 				}
-				else if (args[0].equals("-fd"));
-				else
-				{
-					System.out.println("Invalid argument! It must be either -h or -fd.");
-					System.exit(1);
-				}
+				else if (args[0].equals(argTypes[i])) argMatches[i]=false;
+				else argMatches[i]=true;
 			}
-			else
+			if (Arrays.equals(argMatches, argMismatches))
 			{
-				if (!(args[0].equals(argTypes[0]) || args[0].equals(argTypes[1])))
-				{
-					System.out.println("Invalid argument! It must be either "+argTypes[0]+" or "+argTypes[1]+".");
-					System.exit(1);
-				}					
+				System.out.println("Invalid primary argument! Use the -h argument for help.");
+				System.exit(2);
 			}
 		}
-		else if (args.length==0) 
+		else
 		{
 			try 
 			{
@@ -177,11 +203,6 @@ public class Main
 			{
 				e1.printStackTrace();
 			}
-		}
-		else
-		{
-			System.out.println("Invalid number of arguments provided ("+args.length+")!");
-			System.exit(2);
 		}
 	}
 	public static void main(String[] args) 
@@ -218,10 +239,16 @@ public class Main
 							System.out.println("Fixing duplicate names in "+aflName+"...");
 							fixDuplicateFileNames();
 						}
-						else
+						else if (args[0].startsWith("-r"))
 						{
 							System.out.println("Finding & replacing names in "+aflName+"...");
-							writeAFL(args);
+							writeAfl(args);
+						}
+						else
+						{
+							String[] fileNames = getFileNames();
+							String printArg = "%"+getNumberOfDigits(fileNameTotal)+"d";
+							for (int j=0; j<fileNames.length; j++) System.out.printf(printArg+". %s\n",j,fileNames[j]);
 						}
 					}
 					else System.out.println("Skipping faulty AFL: "+aflName+"!");
